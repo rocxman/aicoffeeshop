@@ -1,0 +1,464 @@
+// AI Coffee Shop Assistant Platform - Prisma Schema
+// Production-ready database schema for PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================
+// USER & AUTHENTICATION
+// ============================================
+
+model User {
+  id           String    @id @default(uuid())
+  name         String?
+  phone        String?   @unique
+  email        String?   @unique
+  password     String?   // Hashed password for admin/staff
+  role         Role      @default(CUSTOMER)
+  avatarUrl    String?
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  
+  // Relations
+  orders       Order[]
+  sessions     Session[]
+  loyaltyPoints LoyaltyPoint?
+  payments     Payment[]
+  
+  @@index([phone])
+  @@index([email])
+  @@index([role])
+}
+
+enum Role {
+  CUSTOMER
+  ADMIN
+  STAFF
+  MANAGER
+}
+
+// ============================================
+// SESSION MANAGEMENT (AI CONTEXT)
+// ============================================
+
+model Session {
+  id          String   @id @default(uuid())
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  channel     Channel
+  context     Json?    // AI conversation context
+  metadata    Json?    // Additional session metadata
+  isActive    Boolean  @default(true)
+  lastActiveAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([channel])
+  @@index([isActive])
+}
+
+enum Channel {
+  WHATSAPP
+  QR
+  WEB
+  VOICE
+  MOBILE_APP
+}
+
+// ============================================
+// MENU SYSTEM
+// ============================================
+
+model MenuCategory {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  icon        String?  // Icon/emoji for category
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  items       MenuItem[]
+  
+  @@index([isActive])
+  @@index([sortOrder])
+}
+
+model MenuItem {
+  id          String   @id @default(uuid())
+  categoryId  String
+  category    MenuCategory @relation(fields: [categoryId], references: [id])
+  name        String
+  description String?
+  price       Int      // Price in cents (e.g., 25000 = Rp 25.000)
+  images      String[] // Array of image URLs
+  isActive    Boolean  @default(true)
+  isPopular   Boolean  @default(false)
+  isFeatured  Boolean  @default(false)
+  prepTime    Int?     // Preparation time in minutes
+  calories    Int?     // Nutritional info
+  tags        String[] // e.g., ["hot", "cold", "vegan", "bestseller"]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  options     MenuOption[]
+  orderItems  OrderItem[]
+  
+  @@index([categoryId])
+  @@index([isActive])
+  @@index([isPopular])
+  @@index([price])
+}
+
+model MenuOption {
+  id          String   @id @default(uuid())
+  itemId      String
+  item        MenuItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  name        String   // e.g., "Size", "Sugar Level", "Milk Type"
+  type        OptionType @default(SINGLE)
+  required    Boolean  @default(false)
+  minSelect   Int      @default(0)
+  maxSelect   Int      @default(1)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  values      MenuOptionValue[]
+  
+  @@index([itemId])
+}
+
+enum OptionType {
+  SINGLE     // Radio button (select one)
+  MULTIPLE   // Checkbox (select multiple)
+}
+
+model MenuOptionValue {
+  id             String   @id @default(uuid())
+  optionId       String
+  option         MenuOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  value          String   // e.g., "Regular", "Large", "Less Sugar"
+  priceModifier  Int      @default(0) // Price adjustment in cents
+  isDefault      Boolean  @default(false)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  
+  // Relations
+  orderItemOptions OrderItemOption[]
+  
+  @@index([optionId])
+  @@index([isActive])
+}
+
+// ============================================
+// ORDER MANAGEMENT
+// ============================================
+
+model Order {
+  id           String   @id @default(uuid())
+  userId       String?
+  user         User?    @relation(fields: [userId], references: [id])
+  orderNumber  String   @unique // Human-readable order number (e.g., ORD-20240115-001)
+  status       OrderStatus @default(PENDING)
+  channel      Channel
+  tableNumber  String?  // For dine-in QR orders
+  customerName String?  // Guest checkout name
+  customerPhone String? // Guest checkout phone
+  customerNotes String? // Special requests
+  
+  // Pricing
+  subtotal     Int      @default(0)
+  discount     Int      @default(0)
+  tax          Int      @default(0)
+  serviceFee   Int      @default(0)
+  totalPrice   Int      @default(0)
+  
+  // Timestamps
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  paidAt       DateTime?
+  completedAt  DateTime?
+  
+  // Relations
+  items        OrderItem[]
+  payment      Payment?
+  promo        Promo?   @relation(fields: [promoId], references: [id])
+  promoId      String?
+  table        Table?   @relation(fields: [tableNumber], references: [number])
+  
+  @@index([userId])
+  @@index([status])
+  @@index([channel])
+  @@index([createdAt])
+  @@index([orderNumber])
+}
+
+enum OrderStatus {
+  PENDING      // Order created, awaiting confirmation
+  CONFIRMED    // Order confirmed by staff
+  PREPARING    // Being prepared
+  READY        // Ready for pickup/delivery
+  DELIVERED    // Completed
+  CANCELLED    // Cancelled
+  REFUNDED     // Refunded
+}
+
+model OrderItem {
+  id           String   @id @default(uuid())
+  orderId      String
+  order        Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  itemId       String
+  item         MenuItem @relation(fields: [itemId], references: [id])
+  quantity     Int
+  unitPrice    Int      // Price at time of order
+  totalPrice   Int      // quantity * unitPrice + options
+  notes        String?  // Special instructions for this item
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  // Relations
+  options      OrderItemOption[]
+  
+  @@index([orderId])
+  @@index([itemId])
+}
+
+model OrderItemOption {
+  id              String   @id @default(uuid())
+  orderItemId     String
+  orderItem       OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  optionValueId   String
+  optionValue     MenuOptionValue @relation(fields: [optionValueId], references: [id])
+  priceModifier   Int      @default(0)
+  createdAt       DateTime @default(now())
+  
+  @@index([orderItemId])
+  @@index([optionValueId])
+}
+
+// ============================================
+// PAYMENT SYSTEM
+// ============================================
+
+model Payment {
+  id           String   @id @default(uuid())
+  orderId      String   @unique
+  order        Order    @relation(fields: [orderId], references: [id])
+  userId       String?
+  user         User?    @relation(fields: [userId], references: [id])
+  method       PaymentMethod
+  provider     String?  // e.g., "midtrans", "xendit", "stripe"
+  providerId   String?  // External payment ID
+  status       PaymentStatus @default(PENDING)
+  amount       Int
+  paidAmount   Int      @default(0) // Amount actually paid
+  refundAmount Int      @default(0)
+  metadata     Json?    // Payment provider response
+  paidAt       DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  @@index([orderId])
+  @@index([userId])
+  @@index([status])
+  @@index([method])
+}
+
+enum PaymentMethod {
+  CASH
+  QRIS
+  DEBIT_CARD
+  CREDIT_CARD
+  E_WALLET
+  BANK_TRANSFER
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+// ============================================
+// PROMO & LOYALTY SYSTEM
+// ============================================
+
+model Promo {
+  id           String   @id @default(uuid())
+  code         String   @unique
+  name         String
+  description  String?
+  type         PromoType
+  valueType    ValueType
+  value        Int      // Discount amount or percentage
+  minPurchase  Int      @default(0)
+  maxDiscount  Int?     // Max discount for percentage type
+  usageLimit   Int?     // Total usage limit
+  usedCount    Int      @default(0)
+  perUserLimit Int      @default(1)
+  isActive     Boolean  @default(true)
+  validFrom    DateTime
+  validUntil   DateTime
+  applicableItems String[] // Specific item IDs (empty = all items)
+  applicableChannels Channel[] // Empty = all channels
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  // Relations
+  orders       Order[]
+  
+  @@index([code])
+  @@index([isActive])
+  @@index([validFrom])
+  @@index([validUntil])
+}
+
+enum PromoType {
+  DISCOUNT   // Percentage or fixed discount
+  BUNDLE     // Buy X get Y
+  BOGO       // Buy one get one
+}
+
+enum ValueType {
+  PERCENTAGE
+  FIXED
+}
+
+model LoyaltyPoint {
+  id         String   @id @default(uuid())
+  userId     String   @unique
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  points     Int      @default(0)
+  lifetimePoints Int  @default(0) // Total points earned
+  tier       LoyaltyTier @default(BRONZE)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  
+  // Relations
+  transactions LoyaltyTransaction[]
+  
+  @@index([userId])
+  @@index([tier])
+}
+
+enum LoyaltyTier {
+  BRONZE
+  SILVER
+  GOLD
+  PLATINUM
+}
+
+model LoyaltyTransaction {
+  id           String   @id @default(uuid())
+  loyaltyPointId String
+  loyaltyPoint LoyaltyPoint @relation(fields: [loyaltyPointId], references: [id], onDelete: Cascade)
+  type         LoyaltyTransactionType
+  points       Int
+  orderId      String?
+  description  String?
+  createdAt    DateTime @default(now())
+  
+  @@index([loyaltyPointId])
+  @@index([type])
+}
+
+enum LoyaltyTransactionType {
+  EARN
+  REDEEM
+  EXPIRE
+  ADJUSTMENT
+}
+
+// ============================================
+// ANALYTICS & LOGGING
+// ============================================
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  action    String
+  entity    String
+  entityId  String?
+  userId    String?
+  metadata  Json?
+  ipAddress String?
+  createdAt DateTime @default(now())
+  
+  @@index([action])
+  @@index([entity])
+  @@index([createdAt])
+}
+
+model SystemSetting {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     Json
+  category  String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([category])
+}
+
+// ============================================
+// TABLE MANAGEMENT (QR Ordering)
+// ============================================
+
+model Table {
+  id          String   @id @default(uuid())
+  number      String   @unique
+  code        String   @unique // QR code content/URL
+  qrCodePath  String?  // Path to QR code image
+  capacity    Int      @default(4)
+  zone        String?  // e.g., "Indoor", "Outdoor", "Smoking", "Non-Smoking"
+  status      TableStatus @default(AVAILABLE)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  orders      Order[]
+  scans       QRScan[]
+  
+  @@index([number])
+  @@index([status])
+  @@index([zone])
+}
+
+enum TableStatus {
+  AVAILABLE
+  OCCUPIED
+  RESERVED
+  MAINTENANCE
+}
+
+model QRScan {
+  id          String   @id @default(uuid())
+  tableId     String
+  table       Table    @relation(fields: [tableId], references: [id], onDelete: Cascade)
+  sessionId   String?  // User session who scanned
+  userId      String?  // User who scanned
+  deviceType  String?  // Mobile/Desktop
+  browser     String?  // Browser info
+  ipAddress   String?  // User IP
+  scannedAt   DateTime @default(now())
+  converted   Boolean  @default(false) // Did scan lead to order?
+  orderId     String?  // Order from this scan
+  
+  @@index([tableId])
+  @@index([scannedAt])
+  @@index([sessionId])
+}
