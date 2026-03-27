@@ -2,160 +2,46 @@
 
 **Enterprise-Grade AI-Powered Ordering System for Modern Coffee Shops**
 
-A complete omnichannel ordering platform with AI barista assistant, supporting WhatsApp, QR codes, web chat, and voice ordering.
-
-![Status](https://img.shields.io/badge/status-active-success)
-![License](https://img.shields.io/badge/license-proprietary-blue)
-![Node.js](https://img.shields.io/badge/node-%3E%3D18-green)
-![PostgreSQL](https://img.shields.io/badge/postgresql-14+-blue)
+A complete omnichannel ordering platform with AI barista assistant, supporting WhatsApp, QR codes, and web chat.
 
 ---
 
-## 🌟 Features
+## 🚀 **Quick Start**
 
-### 🤖 AI-Powered Ordering
-- **Conversational AI Barista** - Natural language ordering via chat
-- **Multi-Channel Support** - WhatsApp, QR, Web, Voice
-- **Smart Recommendations** - AI suggests items based on preferences
-- **Contextual Memory** - Remembers customer preferences and order history
-- **Upselling Engine** - Intelligent product suggestions
+### Prerequisites
+- Node.js 18+
+- PostgreSQL (Supabase recommended)
+- npm or yarn
 
-### 📱 Omnichannel Experience
-- **WhatsApp Integration** - Order via WhatsApp Business API
-- **QR Code Ordering** - Scan and order at table
-- **Web Chat Widget** - Embeddable chat for websites
-- **Voice Ordering** - Hands-free voice commands
-
-### 🛍️ Complete E-Commerce
-- **Menu Management** - Categories, items, options, customizations
-- **Order Lifecycle** - Full order tracking from pending to delivered
-- **Payment Gateway** - QRIS, E-Wallet, Cards, Bank Transfer
-- **Promo Engine** - Discount codes, bundles, BOGO deals
-- **Loyalty Program** - Points, tiers, rewards
-
-### 📊 Business Intelligence
-- **Real-Time Dashboard** - Live order monitoring
-- **Analytics** - Sales, popular items, peak hours
-- **Customer Insights** - Order history, preferences, lifetime value
-- **Inventory Tracking** - Stock management (coming soon)
-
-### 🔐 Enterprise Security
-- **JWT Authentication** - Secure token-based auth
-- **Role-Based Access** - Customer, Staff, Manager, Admin
-- **Data Encryption** - Encrypted sensitive data
-- **Audit Logging** - Complete activity trail
-
----
-
-## 🏗️ Architecture
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                    User Channels                         │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌─────────┐ │
-│  │ WhatsApp │  │ QR Code  │  │   Web    │  │  Voice  │ │
-│  └────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬────┘ │
-└───────┼─────────────┼─────────────┼─────────────┼───────┘
-        │             │             │             │
-        └─────────────┴──────┬──────┴─────────────┘
-                             │
-                    ┌────────▼────────┐
-                    │   API Gateway   │
-                    │   (NestJS)      │
-                    └────────┬────────┘
-                             │
-        ┌────────────────────┼────────────────────┐
-        │                    │                    │
-┌───────▼────────┐  ┌───────▼────────┐  ┌───────▼────────┐
-│   AI Service   │  │  Order Service │  │  Menu Service  │
-│   (OpenAI)     │  │   (Business)   │  │    (CRUD)      │
-└───────┬────────┘  └───────┬────────┘  └───────┬────────┘
-        │                   │                    │
-        └───────────────────┼────────────────────┘
-                            │
-                   ┌────────▼────────┐
-                   │   PostgreSQL    │
-                   │   (Prisma)      │
-                   └─────────────────┘
-```
-
----
-
-## 📂 Project Structure
-
-```
-ai-coffee-shop-assistant-platform/
-├── backend/                      # NestJS Backend
-│   ├── src/
-│   │   ├── modules/
-│   │   │   ├── auth/            # Authentication & Authorization
-│   │   │   ├── ai/              # AI Service & LLM Integration
-│   │   │   ├── order/           # Order Management
-│   │   │   ├── menu/            # Menu Management
-│   │   │   ├── payment/         # Payment Processing
-│   │   │   └── notification/    # WhatsApp, Email, Push
-│   │   ├── common/              # Shared utilities, guards, decorators
-│   │   ├── prisma/              # Database service
-│   │   └── main.ts
-│   ├── prisma/
-│   │   ├── schema.prisma        # Database schema
-│   │   ├── seed.ts              # Sample data
-│   │   └── migrations/          # Database migrations
-│   ├── docker-compose.yml
-│   ├── Dockerfile
-│   └── README.md
-│
-├── frontend/                     # React Dashboard (Coming Soon)
-│   ├── src/
-│   │   ├── components/
-│   │   ├── pages/
-│   │   └── services/
-│   └── package.json
-│
-└── docs/                         # Documentation (Coming Soon)
-    ├── api/
-    ├── architecture/
-    └── deployment/
-```
-
----
-
-## 🚀 Quick Start
-
-### Backend Setup
+### Installation
 
 ```bash
-cd backend
+# Clone repository
+git clone https://github.com/yourusername/aicoffeeshop.git
+cd aicoffeeshop/backend
 
 # Install dependencies
 npm install
 
-# Setup database (Docker)
-docker run --name ai-coffee-db \
-  -e POSTGRES_USER=postgres \
-  -e POSTGRES_PASSWORD=postgres \
-  -e POSTGRES_DB=ai_coffee_shop \
-  -p 5432:5432 \
-  -d postgres:14
-
-# Configure environment
+# Setup environment
 cp .env.example .env
+# Edit .env with your database credentials
 
 # Run migrations
-npm run prisma:migrate
+npx prisma migrate deploy
+
+# Seed database
 npm run prisma:seed
 
 # Start development server
 npm run start:dev
 ```
 
-**Server runs at:** http://localhost:3000
-
-See [backend/QUICKSTART.md](backend/QUICKSTART.md) for detailed setup.
+Server will run at: http://localhost:3000
 
 ---
 
-## 📡 API Endpoints
+## 📡 **API Endpoints**
 
 ### Authentication
 - `POST /api/auth/register` - Register new user
@@ -169,21 +55,118 @@ See [backend/QUICKSTART.md](backend/QUICKSTART.md) for detailed setup.
 
 ### Orders
 - `POST /api/orders` - Create order
-- `GET /api/orders/:id` - Get order
+- `GET /api/orders/:id` - Get order details
 - `PUT /api/orders/:id/status` - Update status (Staff)
 
-### AI
+### AI Chat
 - `POST /api/ai/chat` - Chat with AI barista
-- `POST /api/ai/whatsapp` - WhatsApp webhook
 
-See [backend/README.md](backend/README.md) for full API documentation.
+### WhatsApp
+- `POST /whatsapp/webhook` - WhatsApp webhook
+- `POST /whatsapp/send` - Send message
+
+### Payment
+- `POST /payment/snap` - Create Snap payment
+- `POST /payment/qris` - Create QRIS payment
+- `POST /payment/webhook` - Payment webhook
+
+### Tables (QR)
+- `POST /tables` - Create table
+- `POST /tables/scan` - Scan QR code
+- `GET /tables/analytics/overview` - Analytics
 
 ---
 
-## 🧪 Testing
+## 🛠️ **Tech Stack**
+
+- **Backend:** NestJS 11 + TypeScript
+- **Database:** PostgreSQL (via Supabase)
+- **ORM:** Prisma 7.5
+- **AI:** OpenAI / OpenRouter
+- **Authentication:** JWT + Passport
+- **Payment:** Midtrans
+- **WhatsApp:** Meta Cloud API
+
+---
+
+## 📋 **Environment Variables**
+
+Copy `.env.example` to `.env` and configure:
+
+```env
+# Database (Supabase)
+DATABASE_URL="postgresql://..."
+DIRECT_URL="postgresql://..."
+
+# Supabase Keys
+NEXT_PUBLIC_SUPABASE_URL="..."
+SUPABASE_SERVICE_ROLE_KEY="..."
+
+# JWT
+JWT_SECRET="your-secret"
+
+# OpenAI / OpenRouter
+OPENAI_API_KEY="your-api-key"
+
+# WhatsApp (optional)
+WHATSAPP_ACCESS_TOKEN="..."
+
+# Payment (optional)
+MIDTRANS_SERVER_KEY="..."
+```
+
+---
+
+## 🚀 **Deployment**
+
+### Database (Supabase)
+1. Create project at https://supabase.com
+2. Copy connection strings to `.env`
+3. Run: `npx prisma migrate deploy`
+
+### Backend (Railway)
+1. Push code to GitHub
+2. Deploy on https://railway.app
+3. Set environment variables
+4. Deploy!
+
+### Frontend (Vercel)
+Coming soon...
+
+See [DEPLOYMENT.md](backend/DEPLOYMENT.md) for detailed guide.
+
+---
+
+## 📊 **Project Structure**
+
+```
+aicoffeeshop/
+├── backend/
+│   ├── src/
+│   │   ├── modules/
+│   │   │   ├── auth/       # Authentication
+│   │   │   ├── ai/         # AI Service
+│   │   │   ├── menu/       # Menu Management
+│   │   │   ├── order/      # Order Management
+│   │   │   ├── payment/    # Payment Gateway
+│   │   │   ├── whatsapp/   # WhatsApp Integration
+│   │   │   └── table/      # QR Table System
+│   │   ├── common/         # Shared utilities
+│   │   └── prisma/         # Database service
+│   ├── prisma/
+│   │   ├── schema.prisma   # Database schema
+│   │   └── seed.ts         # Sample data
+│   └── docs/               # Documentation
+├── IMPLEMENTATION_SUMMARY.md
+└── README.md
+```
+
+---
+
+## 🧪 **Testing**
 
 ```bash
-# Run tests
+# Unit tests
 npm run test
 
 # E2E tests
@@ -195,24 +178,17 @@ npm run test:cov
 
 ---
 
-## 🐳 Docker Deployment
+## 📚 **Documentation**
 
-### Development
-
-```bash
-docker-compose up -d
-```
-
-### Production
-
-```bash
-docker build -t ai-coffee-backend .
-docker run -p 3000:3000 --env-file .env ai-coffee-backend
-```
+- [Quick Start Guide](backend/QUICKSTART.md)
+- [API Documentation](backend/README.md)
+- [Deployment Guide](backend/DEPLOYMENT.md)
+- [WhatsApp Setup](backend/docs/WHATSAPP_SETUP.md)
+- [Implementation Summary](IMPLEMENTATION_SUMMARY.md)
 
 ---
 
-## 🔐 Default Credentials (After Seeding)
+## 🔐 **Default Credentials (After Seeding)**
 
 **Admin:**
 - Email: `admin@coffeeshop.com`
@@ -222,109 +198,52 @@ docker run -p 3000:3000 --env-file .env ai-coffee-backend
 - Email: `staff@coffeeshop.com`
 - Password: `staff123`
 
-**Customer:**
-- Phone: `+6281234567892`
+---
+
+## 📈 **Features**
+
+### Phase 1 (✅ Complete)
+- [x] User Authentication (JWT)
+- [x] Menu Management
+- [x] Order Management
+- [x] AI Chat Assistant
+- [x] Database Schema
+
+### Phase 2 (🟡 In Progress)
+- [x] WhatsApp Integration
+- [x] Payment Gateway (Midtrans)
+- [x] QR Code System
+- [ ] Email Notifications
+
+### Phase 3 (⏳ Planned)
+- [ ] Frontend Dashboard (Next.js)
+- [ ] Real-time Updates
+- [ ] Analytics Dashboard
 
 ---
 
-## 🛠️ Tech Stack
+## 🤝 **Contributing**
 
-### Backend
-- **Runtime:** Node.js 18+
-- **Framework:** NestJS
-- **Language:** TypeScript
-- **Database:** PostgreSQL 14+
-- **ORM:** Prisma
-- **AI:** OpenAI GPT-4
-- **Auth:** JWT + Passport
-- **Validation:** class-validator
-
-### Frontend (Coming Soon)
-- **Framework:** React 18
-- **UI Library:** Material-UI
-- **State:** Redux Toolkit
-- **HTTP:** Axios
-
-### DevOps
-- **Container:** Docker
-- **Orchestration:** Docker Compose
-- **CI/CD:** GitHub Actions (coming soon)
-- **Monitoring:** Winston logs
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit changes (`git commit -m 'feat: add AmazingFeature'`)
+4. Push to branch (`git push origin feature/AmazingFeature`)
+5. Open Pull Request
 
 ---
 
-## 📊 Database Schema
-
-### Core Tables
-- **users** - User accounts (customers, staff, admin)
-- **sessions** - AI conversation sessions
-- **menu_categories** - Menu category hierarchy
-- **menu_items** - Products with pricing
-- **menu_options** - Customization options
-- **orders** - Order headers
-- **order_items** - Order line items
-- **payments** - Payment transactions
-- **promos** - Promotional campaigns
-- **loyalty_points** - Customer rewards
-
-See schema at: [backend/prisma/schema.prisma](backend/prisma/schema.prisma)
-
----
-
-## 🎯 Roadmap
-
-### Phase 1 - Core Platform ✅ (Current)
-- [x] Backend API
-- [x] Database schema
-- [x] AI chat service
-- [x] Order management
-- [x] Authentication
-
-### Phase 2 - Integrations (Next)
-- [ ] WhatsApp Business API
-- [ ] Payment gateway (Midtrans/Xendit)
-- [ ] QR code generation
-- [ ] Email notifications
-
-### Phase 3 - Frontend
-- [ ] Business dashboard (React)
-- [ ] Customer web app
-- [ ] Admin panel
-- [ ] Analytics UI
-
-### Phase 4 - Advanced Features
-- [ ] Voice ordering
-- [ ] Multi-branch support
-- [ ] Inventory management
-- [ ] Advanced analytics
-- [ ] Mobile apps (iOS/Android)
-
----
-
-## 🤝 Contributing
-
-This is a proprietary project. For external contributions, please contact the maintainer.
-
----
-
-## 📄 License
+## 📄 **License**
 
 Proprietary software. All rights reserved.
 
 ---
 
-## 👥 Team
+## 👥 **Support**
 
-Built with ❤️ by the AI Coffee Shop Team
-
----
-
-## 📞 Support
-
-- **Email:** support@aicoffeeshop.com
-- **Documentation:** [See docs folder](docs/)
-- **Issues:** Create an issue on GitHub
+For issues and questions:
+- Create an issue on GitHub
+- Email: support@aicoffeeshop.com
 
 ---
 
-**Last Updated:** March 2026
+**Built with ❤️ using NestJS and Prisma**
