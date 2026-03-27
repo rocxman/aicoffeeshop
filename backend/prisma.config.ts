@@ -10,10 +10,6 @@ export default defineConfig({
   },
   datasource: {
     // Use DIRECT_URL for migrations, DATABASE_URL for runtime
-    url: process.env["DIRECT_URL"],
-  },
-  // For Prisma Client, we'll use DATABASE_URL (pooler)
-  generator: {
-    // This is handled in the schema file
+    url: process.env["DIRECT_URL"] || process.env["DATABASE_URL"],
   },
 });

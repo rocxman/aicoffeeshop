@@ -2,24 +2,41 @@
 -- AI COFFEE SHOP PLATFORM - SUPABASE MIGRATION
 -- ============================================
 -- Run this SQL in Supabase Dashboard > SQL Editor
--- Or use: npx prisma migrate deploy
+-- Compatible with Supabase (PostgreSQL)
 -- ============================================
 
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
+-- ============================================
+-- CREATE ENUMS (Drop if exists first)
+-- ============================================
+
+-- Drop enums if they exist (for re-run safety)
+DROP TYPE IF EXISTS "Role" CASCADE;
+DROP TYPE IF EXISTS "Channel" CASCADE;
+DROP TYPE IF EXISTS "OptionType" CASCADE;
+DROP TYPE IF EXISTS "OrderStatus" CASCADE;
+DROP TYPE IF EXISTS "PaymentMethod" CASCADE;
+DROP TYPE IF EXISTS "PaymentStatus" CASCADE;
+DROP TYPE IF EXISTS "PromoType" CASCADE;
+DROP TYPE IF EXISTS "ValueType" CASCADE;
+DROP TYPE IF EXISTS "LoyaltyTier" CASCADE;
+DROP TYPE IF EXISTS "LoyaltyTransactionType" CASCADE;
+DROP TYPE IF EXISTS "TableStatus" CASCADE;
+
 -- Create enums
-CREATE TYPE IF NOT EXISTS "Role" AS ENUM ('CUSTOMER', 'ADMIN', 'STAFF', 'MANAGER');
-CREATE TYPE IF NOT EXISTS "Channel" AS ENUM ('WHATSAPP', 'QR', 'WEB', 'VOICE', 'MOBILE_APP');
-CREATE TYPE IF NOT EXISTS "OptionType" AS ENUM ('SINGLE', 'MULTIPLE');
-CREATE TYPE IF NOT EXISTS "OrderStatus" AS ENUM ('PENDING', 'CONFIRMED', 'PREPARING', 'READY', 'DELIVERED', 'CANCELLED', 'REFUNDED');
-CREATE TYPE IF NOT EXISTS "PaymentMethod" AS ENUM ('CASH', 'QRIS', 'DEBIT_CARD', 'CREDIT_CARD', 'E_WALLET', 'BANK_TRANSFER');
-CREATE TYPE IF NOT EXISTS "PaymentStatus" AS ENUM ('PENDING', 'PAID', 'FAILED', 'REFUNDED', 'PARTIALLY_REFUNDED');
-CREATE TYPE IF NOT EXISTS "PromoType" AS ENUM ('DISCOUNT', 'BUNDLE', 'BOGO');
-CREATE TYPE IF NOT EXISTS "ValueType" AS ENUM ('PERCENTAGE', 'FIXED');
-CREATE TYPE IF NOT EXISTS "LoyaltyTier" AS ENUM ('BRONZE', 'SILVER', 'GOLD', 'PLATINUM');
-CREATE TYPE IF NOT EXISTS "LoyaltyTransactionType" AS ENUM ('EARN', 'REDEEM', 'EXPIRE', 'ADJUSTMENT');
-CREATE TYPE IF NOT EXISTS "TableStatus" AS ENUM ('AVAILABLE', 'OCCUPIED', 'RESERVED', 'MAINTENANCE');
+CREATE TYPE "Role" AS ENUM ('CUSTOMER', 'ADMIN', 'STAFF', 'MANAGER');
+CREATE TYPE "Channel" AS ENUM ('WHATSAPP', 'QR', 'WEB', 'VOICE', 'MOBILE_APP');
+CREATE TYPE "OptionType" AS ENUM ('SINGLE', 'MULTIPLE');
+CREATE TYPE "OrderStatus" AS ENUM ('PENDING', 'CONFIRMED', 'PREPARING', 'READY', 'DELIVERED', 'CANCELLED', 'REFUNDED');
+CREATE TYPE "PaymentMethod" AS ENUM ('CASH', 'QRIS', 'DEBIT_CARD', 'CREDIT_CARD', 'E_WALLET', 'BANK_TRANSFER');
+CREATE TYPE "PaymentStatus" AS ENUM ('PENDING', 'PAID', 'FAILED', 'REFUNDED', 'PARTIALLY_REFUNDED');
+CREATE TYPE "PromoType" AS ENUM ('DISCOUNT', 'BUNDLE', 'BOGO');
+CREATE TYPE "ValueType" AS ENUM ('PERCENTAGE', 'FIXED');
+CREATE TYPE "LoyaltyTier" AS ENUM ('BRONZE', 'SILVER', 'GOLD', 'PLATINUM');
+CREATE TYPE "LoyaltyTransactionType" AS ENUM ('EARN', 'REDEEM', 'EXPIRE', 'ADJUSTMENT');
+CREATE TYPE "TableStatus" AS ENUM ('AVAILABLE', 'OCCUPIED', 'RESERVED', 'MAINTENANCE');
 
 -- ============================================
 -- USER & AUTHENTICATION
@@ -38,9 +55,9 @@ CREATE TABLE IF NOT EXISTS "User" (
   "updatedAt" TIMESTAMP NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS "User_phone_idx" ON "User"(phone);
-CREATE INDEX IF NOT EXISTS "User_email_idx" ON "User"(email);
-CREATE INDEX IF NOT EXISTS "User_role_idx" ON "User"(role);
+CREATE INDEX "User_phone_idx" ON "User"(phone);
+CREATE INDEX "User_email_idx" ON "User"(email);
+CREATE INDEX "User_role_idx" ON "User"(role);
 
 -- ============================================
 -- SESSION MANAGEMENT
@@ -61,9 +78,9 @@ CREATE TABLE IF NOT EXISTS "Session" (
     FOREIGN KEY ("userId") REFERENCES "User"(id) ON DELETE CASCADE
 );
 
-CREATE INDEX IF NOT EXISTS "Session_userId_idx" ON "Session"("userId");
-CREATE INDEX IF NOT EXISTS "Session_channel_idx" ON "Session"(channel);
-CREATE INDEX IF NOT EXISTS "Session_isActive_idx" ON "Session"("isActive");
+CREATE INDEX "Session_userId_idx" ON "Session"("userId");
+CREATE INDEX "Session_channel_idx" ON "Session"(channel);
+CREATE INDEX "Session_isActive_idx" ON "Session"("isActive");
 
 -- ============================================
 -- MENU SYSTEM
@@ -80,8 +97,8 @@ CREATE TABLE IF NOT EXISTS "MenuCategory" (
   "updatedAt" TIMESTAMP NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS "MenuCategory_isActive_idx" ON "MenuCategory"("isActive");
-CREATE INDEX IF NOT EXISTS "MenuCategory_sortOrder_idx" ON "MenuCategory"("sortOrder");
+CREATE INDEX "MenuCategory_isActive_idx" ON "MenuCategory"("isActive");
+CREATE INDEX "MenuCategory_sortOrder_idx" ON "MenuCategory"("sortOrder");
 
 CREATE TABLE IF NOT EXISTS "MenuItem" (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -103,10 +120,10 @@ CREATE TABLE IF NOT EXISTS "MenuItem" (
     FOREIGN KEY ("categoryId") REFERENCES "MenuCategory"(id)
 );
 
-CREATE INDEX IF NOT EXISTS "MenuItem_categoryId_idx" ON "MenuItem"("categoryId");
-CREATE INDEX IF NOT EXISTS "MenuItem_isActive_idx" ON "MenuItem"("isActive");
-CREATE INDEX IF NOT EXISTS "MenuItem_isPopular_idx" ON "MenuItem"("isPopular");
-CREATE INDEX IF NOT EXISTS "MenuItem_price_idx" ON "MenuItem"(price);
+CREATE INDEX "MenuItem_categoryId_idx" ON "MenuItem"("categoryId");
+CREATE INDEX "MenuItem_isActive_idx" ON "MenuItem"("isActive");
+CREATE INDEX "MenuItem_isPopular_idx" ON "MenuItem"("isPopular");
+CREATE INDEX "MenuItem_price_idx" ON "MenuItem"(price);
 
 CREATE TABLE IF NOT EXISTS "MenuOption" (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -123,7 +140,7 @@ CREATE TABLE IF NOT EXISTS "MenuOption" (
     FOREIGN KEY ("itemId") REFERENCES "MenuItem"(id) ON DELETE CASCADE
 );
 
-CREATE INDEX IF NOT EXISTS "MenuOption_itemId_idx" ON "MenuOption"("itemId");
+CREATE INDEX "MenuOption_itemId_idx" ON "MenuOption"("itemId");
 
 CREATE TABLE IF NOT EXISTS "MenuOptionValue" (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -139,8 +156,8 @@ CREATE TABLE IF NOT EXISTS "MenuOptionValue" (
     FOREIGN KEY ("optionId") REFERENCES "MenuOption"(id) ON DELETE CASCADE
 );
 
-CREATE INDEX IF NOT EXISTS "MenuOptionValue_optionId_idx" ON "MenuOptionValue"("optionId");
-CREATE INDEX IF NOT EXISTS "MenuOptionValue_isActive_idx" ON "MenuOptionValue"("isActive");
+CREATE INDEX "MenuOptionValue_optionId_idx" ON "MenuOptionValue"("optionId");
+CREATE INDEX "MenuOptionValue_isActive_idx" ON "MenuOptionValue"("isActive");
 
 -- ============================================
 -- ORDER MANAGEMENT
@@ -173,11 +190,11 @@ CREATE TABLE IF NOT EXISTS "Order" (
     FOREIGN KEY ("tableNumber") REFERENCES "Table"(number)
 );
 
-CREATE INDEX IF NOT EXISTS "Order_userId_idx" ON "Order"("userId");
-CREATE INDEX IF NOT EXISTS "Order_status_idx" ON "Order"(status);
-CREATE INDEX IF NOT EXISTS "Order_channel_idx" ON "Order"(channel);
-CREATE INDEX IF NOT EXISTS "Order_createdAt_idx" ON "Order"("createdAt");
-CREATE INDEX IF NOT EXISTS "Order_orderNumber_idx" ON "Order"("orderNumber");
+CREATE INDEX "Order_userId_idx" ON "Order"("userId");
+CREATE INDEX "Order_status_idx" ON "Order"(status);
+CREATE INDEX "Order_channel_idx" ON "Order"(channel);
+CREATE INDEX "Order_createdAt_idx" ON "Order"("createdAt");
+CREATE INDEX "Order_orderNumber_idx" ON "Order"("orderNumber");
 
 CREATE TABLE IF NOT EXISTS "OrderItem" (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -196,8 +213,8 @@ CREATE TABLE IF NOT EXISTS "OrderItem" (
     FOREIGN KEY ("itemId") REFERENCES "MenuItem"(id)
 );
 
-CREATE INDEX IF NOT EXISTS "OrderItem_orderId_idx" ON "OrderItem"("orderId");
-CREATE INDEX IF NOT EXISTS "OrderItem_itemId_idx" ON "OrderItem"("itemId");
+CREATE INDEX "OrderItem_orderId_idx" ON "OrderItem"("orderId");
+CREATE INDEX "OrderItem_itemId_idx" ON "OrderItem"("itemId");
 
 CREATE TABLE IF NOT EXISTS "OrderItemOption" (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -212,8 +229,8 @@ CREATE TABLE IF NOT EXISTS "OrderItemOption" (
     FOREIGN KEY ("optionValueId") REFERENCES "MenuOptionValue"(id)
 );
 
-CREATE INDEX IF NOT EXISTS "OrderItemOption_orderItemId_idx" ON "OrderItemOption"("orderItemId");
-CREATE INDEX IF NOT EXISTS "OrderItemOption_optionValueId_idx" ON "OrderItemOption"("optionValueId");
+CREATE INDEX "OrderItemOption_orderItemId_idx" ON "OrderItemOption"("orderItemId");
+CREATE INDEX "OrderItemOption_optionValueId_idx" ON "OrderItemOption"("optionValueId");
 
 -- ============================================
 -- PAYMENT SYSTEM
@@ -241,10 +258,10 @@ CREATE TABLE IF NOT EXISTS "Payment" (
     FOREIGN KEY ("userId") REFERENCES "User"(id)
 );
 
-CREATE INDEX IF NOT EXISTS "Payment_orderId_idx" ON "Payment"("orderId");
-CREATE INDEX IF NOT EXISTS "Payment_userId_idx" ON "Payment"("userId");
-CREATE INDEX IF NOT EXISTS "Payment_status_idx" ON "Payment"(status);
-CREATE INDEX IF NOT EXISTS "Payment_method_idx" ON "Payment"(method);
+CREATE INDEX "Payment_orderId_idx" ON "Payment"("orderId");
+CREATE INDEX "Payment_userId_idx" ON "Payment"("userId");
+CREATE INDEX "Payment_status_idx" ON "Payment"(status);
+CREATE INDEX "Payment_method_idx" ON "Payment"(method);
 
 -- ============================================
 -- PROMO & LOYALTY
@@ -272,10 +289,10 @@ CREATE TABLE IF NOT EXISTS "Promo" (
   "updatedAt" TIMESTAMP NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS "Promo_code_idx" ON "Promo"(code);
-CREATE INDEX IF NOT EXISTS "Promo_isActive_idx" ON "Promo"("isActive");
-CREATE INDEX IF NOT EXISTS "Promo_validFrom_idx" ON "Promo"("validFrom");
-CREATE INDEX IF NOT EXISTS "Promo_validUntil_idx" ON "Promo"("validUntil");
+CREATE INDEX "Promo_code_idx" ON "Promo"(code);
+CREATE INDEX "Promo_isActive_idx" ON "Promo"("isActive");
+CREATE INDEX "Promo_validFrom_idx" ON "Promo"("validFrom");
+CREATE INDEX "Promo_validUntil_idx" ON "Promo"("validUntil");
 
 CREATE TABLE IF NOT EXISTS "LoyaltyPoint" (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -290,8 +307,8 @@ CREATE TABLE IF NOT EXISTS "LoyaltyPoint" (
     FOREIGN KEY ("userId") REFERENCES "User"(id) ON DELETE CASCADE
 );
 
-CREATE INDEX IF NOT EXISTS "LoyaltyPoint_userId_idx" ON "LoyaltyPoint"("userId");
-CREATE INDEX IF NOT EXISTS "LoyaltyPoint_tier_idx" ON "LoyaltyPoint"(tier);
+CREATE INDEX "LoyaltyPoint_userId_idx" ON "LoyaltyPoint"("userId");
+CREATE INDEX "LoyaltyPoint_tier_idx" ON "LoyaltyPoint"(tier);
 
 CREATE TABLE IF NOT EXISTS "LoyaltyTransaction" (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -306,8 +323,8 @@ CREATE TABLE IF NOT EXISTS "LoyaltyTransaction" (
     FOREIGN KEY ("loyaltyPointId") REFERENCES "LoyaltyPoint"(id) ON DELETE CASCADE
 );
 
-CREATE INDEX IF NOT EXISTS "LoyaltyTransaction_loyaltyPointId_idx" ON "LoyaltyTransaction"("loyaltyPointId");
-CREATE INDEX IF NOT EXISTS "LoyaltyTransaction_type_idx" ON "LoyaltyTransaction"(type);
+CREATE INDEX "LoyaltyTransaction_loyaltyPointId_idx" ON "LoyaltyTransaction"("loyaltyPointId");
+CREATE INDEX "LoyaltyTransaction_type_idx" ON "LoyaltyTransaction"(type);
 
 -- ============================================
 -- TABLE MANAGEMENT (QR Ordering)
@@ -326,9 +343,9 @@ CREATE TABLE IF NOT EXISTS "Table" (
   "updatedAt" TIMESTAMP NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS "Table_number_idx" ON "Table"(number);
-CREATE INDEX IF NOT EXISTS "Table_status_idx" ON "Table"(status);
-CREATE INDEX IF NOT EXISTS "Table_zone_idx" ON "Table"(zone);
+CREATE INDEX "Table_number_idx" ON "Table"(number);
+CREATE INDEX "Table_status_idx" ON "Table"(status);
+CREATE INDEX "Table_zone_idx" ON "Table"(zone);
 
 CREATE TABLE IF NOT EXISTS "QRScan" (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -346,9 +363,9 @@ CREATE TABLE IF NOT EXISTS "QRScan" (
     FOREIGN KEY ("tableId") REFERENCES "Table"(id) ON DELETE CASCADE
 );
 
-CREATE INDEX IF NOT EXISTS "QRScan_tableId_idx" ON "QRScan"("tableId");
-CREATE INDEX IF NOT EXISTS "QRScan_scannedAt_idx" ON "QRScan"("scannedAt");
-CREATE INDEX IF NOT EXISTS "QRScan_sessionId_idx" ON "QRScan"("sessionId");
+CREATE INDEX "QRScan_tableId_idx" ON "QRScan"("tableId");
+CREATE INDEX "QRScan_scannedAt_idx" ON "QRScan"("scannedAt");
+CREATE INDEX "QRScan_sessionId_idx" ON "QRScan"("sessionId");
 
 -- ============================================
 -- SYSTEM & AUDIT
@@ -365,9 +382,9 @@ CREATE TABLE IF NOT EXISTS "AuditLog" (
   "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS "AuditLog_action_idx" ON "AuditLog"(action);
-CREATE INDEX IF NOT EXISTS "AuditLog_entity_idx" ON "AuditLog"(entity);
-CREATE INDEX IF NOT EXISTS "AuditLog_createdAt_idx" ON "AuditLog"("createdAt");
+CREATE INDEX "AuditLog_action_idx" ON "AuditLog"(action);
+CREATE INDEX "AuditLog_entity_idx" ON "AuditLog"(entity);
+CREATE INDEX "AuditLog_createdAt_idx" ON "AuditLog"("createdAt");
 
 CREATE TABLE IF NOT EXISTS "SystemSetting" (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -379,42 +396,23 @@ CREATE TABLE IF NOT EXISTS "SystemSetting" (
   "updatedAt" TIMESTAMP NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS "SystemSetting_category_idx" ON "SystemSetting"(category);
+CREATE INDEX "SystemSetting_category_idx" ON "SystemSetting"(category);
 
 -- ============================================
--- SEED DATA (Optional - Run separately if needed)
+-- VERIFICATION
 -- ============================================
 
--- Admin user
-INSERT INTO "User" (email, name, phone, password, role) 
-VALUES ('admin@coffeeshop.com', 'Admin User', '+6281234567890', '$2b$10$hashpassword123', 'ADMIN')
-ON CONFLICT (email) DO NOTHING;
-
--- Staff user
-INSERT INTO "User" (email, name, phone, password, role) 
-VALUES ('staff@coffeeshop.com', 'Staff User', '+6281234567891', '$2b$10$hashpassword123', 'STAFF')
-ON CONFLICT (email) DO NOTHING;
-
--- Customer
-INSERT INTO "User" (phone, name, role) 
-VALUES ('+6281234567892', 'John Doe', 'CUSTOMER')
-ON CONFLICT (phone) DO NOTHING;
-
--- Menu Categories
-INSERT INTO "MenuCategory" (id, name, icon, "sortOrder") VALUES
-  (gen_random_uuid(), 'Coffee', '☕', 1),
-  (gen_random_uuid(), 'Non-Coffee', '🍵', 2),
-  (gen_random_uuid(), 'Food & Snacks', '🥐', 3)
-ON CONFLICT DO NOTHING;
-
--- ============================================
--- COMPLETION MESSAGE
--- ============================================
-
--- Verify tables created
+-- Show all created tables
 SELECT 
   '✅ Migration completed successfully!' as status,
   COUNT(*) as total_tables
 FROM information_schema.tables 
 WHERE table_schema = 'public' 
   AND table_type = 'BASE TABLE';
+
+-- List all tables
+SELECT table_name 
+FROM information_schema.tables 
+WHERE table_schema = 'public' 
+  AND table_type = 'BASE TABLE'
+ORDER BY table_name;
